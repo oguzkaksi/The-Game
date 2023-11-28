@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: darkgreen;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #startScreen {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1;
+            color: white;
+            margin-top: 20px; /* Adjust the margin as needed */
+        }
+
+        #startButton {
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #asciiArt {
+            font-family: monospace;
+            white-space: pre;
+            font-size: 5px; /* Adjust the font size as needed */
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="startScreen">
+        <h1>The Game</h1>
+        <p>Use arrow keys to move.</p>
+        <button id="startButton">Start</button>
+    </div>
+    <pre id="asciiArt">
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                            .....                                                   
+                                      ....:--===--:...                                              
+                             .......:-=================-:.... ..                                    
+                         ....:--============================---:...                                 
+                    ...:-===========================================-.                              
+                   .===========================================++++*+:.                             
+                   .=-:---===============================+++++++====++.                             
+                   .=-....::-=======================++++*+===-------=+-.                            
+                   :=-......:===:---==========+++++++===--------------------+=                            
+                  .:=:......:-==.....::-==+++*+===--------------------+=+:                          
+           ...::-====:......:-==.........:=+=-------------------------=++:                          
+           :=========:......:-==..........-++-------------------------=++.                         
+           :==========-::...:-==:.........:=+=-------------------------=+=:.                       
+           .===============-:-==:..........-=+=----------------------=++++*......                  
+           .===================+-:..........-++-----------------=++++++======--:....               
+           .-=======================-::.....:=+=-----------==+++++==================:....          
+          :+++===========================:::.-++=------=++++++==========================--:..      
+       ...=*#%*=+###*============++==========-=+=-==+++++================================+*-.      
+    .......:=%+=*##+=+*======================+++++++================================+******-.      
+  ...............-#=+=+====================*#%%*================================+******+=+*:       
+ ............:::-=*#===+===================+##*=============================+****#%%#**==+*.       
+  ..........:::---=*#**##*+=============================================+****##%###%#**+**+..      
+   ...........::::--=*****++++==============================-=======+*****%%%##%%%#%#******+:....   
+  ..............:::::----===================================-----=*******##%%###%%###**#%%%%+.....  
+   ................::::::----=======+=========================---=***+==*###%%%#%%%##%%%%%#=........
+   ...................:::::::----=======+=========####*=========-=***==+*###%%%#%%%%%%%+-...........
+      ....................::::::----========+====*###++**=========*******#%%#%%%%%%#+--::...........
+         .....................::::::----=========++#*====*========******#%%%%%%%*++==--:::..........
+           .......................:::::------======*#=+==+*======+**##%%%%%%#*+++==----::...........
+             .........................:::::-----===+##+==**==+#####%%%%%%*+++===----:::.............
+                ..........................:::::-----=*#######****#%%%#*+++==-----::::...............
+                  .............................::::----=++++++++*#*+++==-----::::...................
+                      .............................:::::------=====------:::::...................   
+                           .............................::::---------::::.....................      
+                               ...............................::::::.........................       
+                                    .....................................................           
+                                       ..............................................               
+                                                ..............................                       </pre>
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Get start screen elements
+        const startScreen = document.getElementById("startScreen");
+        const startButton = document.getElementById("startButton");
+
+        // Player properties
+        const playerWidth = 50;
+        const playerHeight = 80;
+        let playerX = canvas.width / 2 - playerWidth / 2; // Start at the center
+        let playerY = 475; // Start at the bottom
+        const playerSpeed = 5 * 1; // 1.25 times faster
+
+        // Car properties
+        const carWidth = 50;
+        const carHeight = 80;
+        let carSpeed = 9; // Increased initial speed by 3 times
+        const cars = [];
+
+        // Game properties
+        let score = 0;
+        let gameover = false;
+        let gameStarted = false;
+
+        // Road properties
+        const roadColor = "#808080"; // Grey color
+        const lineColor = "#ffffff"; // White color
+        const stripedLineColor = "#ffffff"; // White color for striped lines
+        const contourColor = "#000000"; // Black color
+        const laneCount = 5; // Number of road lanes
+
+        // Lane properties
+        const laneWidth = canvas.width / laneCount;
+        const lineGap = 20;
+        const maxCarSpeed = 15;
+
+        // Stripe properties
+        let stripeOffset = 0;
+
+        // Handle keyboard input
+        const keys = {};
+        document.addEventListener("keydown", function (e) {
+            keys[e.key] = true;
+
+            // Start the game on pressing any key if not already started
+            if (!gameStarted) {
+                gameStarted = true;
+                startScreen.style.display = "none";
+                startGame();
+            }
+        });
+
+        document.addEventListener("keyup", function (e) {
+            keys[e.key] = false;
+        });
+
+        // Start game function
+        function startGame() {
+            // Game loop
+            function gameLoop() {
+                update();
+                draw();
+
+                if (!gameover) {
+                    requestAnimationFrame(gameLoop);
+                }
+            }
+
+            // Start the game loop
+            gameLoop();
+        }
+
+        // Update game elements
+        function update() {
+            if (!gameover) {
+                // Gradually increase car speed
+                if (carSpeed < maxCarSpeed) {
+                    carSpeed += 0.001;
+                }
+
+                // Move player
+                if (keys["ArrowLeft"] && playerX > 0) {
+                    playerX -= playerSpeed;
+                }
+                if (keys["ArrowRight"] && playerX < canvas.width - playerWidth) {
+                    playerX += playerSpeed;
+                }
+                if (keys["ArrowUp"] && playerY > 0) {
+                    playerY -= playerSpeed;
+                }
+                if (keys["ArrowDown"] && playerY < canvas.height - playerHeight) {
+                    playerY += playerSpeed;
+                }
+
+                // Move cars
+                for (let i = 0; i < cars.length; i++) {
+                    cars[i].y += carSpeed;
+
+                    // Check for collision with player
+                    if (
+                        cars[i].x < playerX + playerWidth &&
+                        cars[i].x + carWidth > playerX &&
+                        cars[i].y < playerY + playerHeight &&
+                        cars[i].y + carHeight > playerY
+                    ) {
+                        gameover = true;
+                        break;
+                    }
+
+                    // Remove cars that go off-screen
+                    if (cars[i].y > canvas.height) {
+                        score++;
+                        cars.splice(i, 1);
+                        i--;
+                    }
+                }
+
+                // Generate new cars
+                if (Math.random() < 0.02) {
+                    const laneIndex = Math.floor(Math.random() * laneCount);
+                    const carX = laneIndex * laneWidth + Math.random() * (laneWidth - carWidth);
+                    cars.push({ x: carX, y: -carHeight });
+                }
+
+                // Update the stripeOffset for the next frame
+                stripeOffset += carSpeed; // Use carSpeed to control the speed of the stripes
+                if (stripeOffset > lineGap * 2) {
+                    stripeOffset = 0; // Reset the offset when it exceeds the height of two lines
+                }
+            }
+        }
+
+        // Draw game elements
+        function draw() {
+            // Draw road
+            ctx.fillStyle = roadColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw road lanes
+            ctx.fillStyle = lineColor;
+            for (let i = 0; i < laneCount; i++) {
+                const laneX = i * laneWidth;
+                ctx.fillRect(laneX - 2, 0, 4, canvas.height);
+
+                // Draw striped lines in the middle of each lane with moving effect
+                for (let j = 0; j < canvas.height / (lineGap * 2); j++) {
+                    ctx.fillStyle = stripedLineColor;
+                    ctx.fillRect(
+                        laneX + laneWidth / 2 - 1,
+                        j * (lineGap * 2) - stripeOffset, // Use the offset to move the stripes
+                        2,
+                        lineGap
+                    );
+                }
+            }
+
+// Draw player
+ctx.fillStyle = "blue";
+ctx.font = "5px 'Courier New', monospace"; // Adjust the font size as needed
+
+const playerAsciiArt = `
+   ░░░░░▒▒▒▒░░░░░   
+ ░░▓▓▓████████▓▓▓░  
+ ░▓▓████████████▓▓░ 
+ ░█▓████████████▓█░ 
+ ░█▓████████████▓█░ 
+ ░████▓▓▒▒▒▒▓▓████░ 
+░░█▒░░        ░░▒█░░
+▒▓▓▓░          ░▓▓▓▒
+ ░▓░▒░▒▒▓▓▓▓▒▒░▒░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓▒████████████▒▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░████████████████░ 
+ ░█▒░░░▒▒▒▒▒▒░░░▒█░ 
+ ░▒▓██▓▓▓▓▓▓▓▓██▓▒░ 
+  ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░  
+`.split('\n');
+
+for (let i = 0; i < playerAsciiArt.length; i++) {
+    ctx.fillText(playerAsciiArt[i], playerX, playerY + i * 5); // Adjust the spacing as needed
+}
+
+// Draw red cars
+ctx.fillStyle = "red";
+for (let i = 0; i < cars.length; i++) {
+    ctx.font = "5px 'Courier New', monospace"; // Adjust the font size as needed
+
+    const carAsciiArt = `
+   ░░░░░▒▒▒▒░░░░░   
+ ░░▓▓▓████████▓▓▓░  
+ ░▓▓████████████▓▓░ 
+ ░█▓████████████▓█░ 
+ ░█▓████████████▓█░ 
+ ░████▓▓▒▒▒▒▓▓████░ 
+░░█▒░░        ░░▒█░░
+▒▓▓▓░          ░▓▓▓▒
+ ░▓░▒░▒▒▓▓▓▓▒▒░▒░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓▒████████████▒▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░▓░████████████░▓░ 
+ ░████████████████░ 
+ ░█▒░░░▒▒▒▒▒▒░░░▒█░ 
+ ░▒▓██▓▓▓▓▓▓▓▓██▓▒░ 
+  ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░  
+`.split('\n');
+
+    for (let j = 0; j < carAsciiArt.length; j++) {
+        ctx.fillText(carAsciiArt[j], cars[i].x, cars[i].y + j * 5); // Adjust the spacing as needed
+    }
+}
+
+
+            // Draw score
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+
+            // Draw game over message
+            if (gameover) {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.5)"; // Red with transparency
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "white";
+                ctx.font = "40px Arial";
+                ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2 - 20);
+
+                // Display "Press F5 to reload" message
+                ctx.fillStyle = "black";
+                ctx.font = "20px Arial";
+                const reloadText = "Press F5 to reload.";
+                const reloadWidth = ctx.measureText(reloadText).width;
+                const reloadX = canvas.width / 2 - reloadWidth / 2;
+                const reloadY = canvas.height / 2 + 20;
+
+                ctx.fillText(reloadText, reloadX, reloadY);
+
+                // Display reveal text and link based on the score
+                if (score < 50) {
+                    ctx.font = "20px Arial";
+                    ctx.fillText("If you make it to 50 points, there is a reveal.", canvas.width / 2 - 210, canvas.height / 2 + 60);
+                } else {
+                    // Display clickable link
+                    ctx.fillStyle = "blue";
+                    ctx.font = "20px Arial";
+                    const linkText = "Click";
+                    const linkWidth = ctx.measureText(linkText).width;
+                    const linkX = canvas.width / 2 - linkWidth / 2;
+                    const linkY = canvas.height / 2 + 100;
+
+                    ctx.fillText(linkText, linkX, linkY);
+
+                    canvas.addEventListener("click", function (e) {
+                        const rect = canvas.getBoundingClientRect();
+                        const mouseX = e.clientX - rect.left;
+                        mouseY = e.clientY - rect.top;
+
+                        if (
+                            mouseX >= linkX &&
+                            mouseX <= linkX + linkWidth &&
+                            mouseY >= linkY - 20 &&
+                            mouseY <= linkY
+                        ) {
+                            window.location.href = "https://ibb.co/NZngH7s";
+                        }
+                    });
+
+                    // Display "Thank you for playing!" text
+                    ctx.fillStyle = "white";
+                    ctx.font = "20px Arial";
+                    ctx.fillText("Thank you for playing!", canvas.width / 2 - 120, canvas.height / 2 + 140);
+                }
+            }
+
+            // Draw black contour lines
+            ctx.strokeStyle = contourColor;
+            ctx.lineWidth = 5;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Start game on button click
+        startButton.addEventListener("click", function () {
+            gameStarted = true;
+            startScreen.style.display = "none";
+            asciiArt.style.display = "none"; // Hide ASCII art
+            startGame();
+        });
+    </script>
+</body>
+
+</html>
