@@ -159,18 +159,32 @@ const filePath = 'highscores.json';
 const apiUrl = `https://api.github.com/repos/${oguzkaksi}/${The-Game}/contents/${The-Game
 /highscores.json}`;
 
-// Function to get highscores
+const repositoryOwner = 'oguzkaksi';
+const repositoryName = 'The-Game';
+const filePath = 'highscores.json';
+const apiUrl = `https://api.github.com/repos/${oguzkaksi}/${The-Game}/contents/${The-Game
+/highscores.json}`;
+
+// Function to get highscores without authentication
 async function getHighscores() {
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-    const highscores = JSON.parse(atob(data.content)); // Decode base64 content
-    console.log('Highscores:', highscores.highscores);
-    // Update your game's leaderboard with the retrieved highscores
-  } catch (error) {
-    console.error('Failed to retrieve highscores:', error);
-  }
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        // Parse the content from base64
+        const content = atob(data.content);
+        const highscores = JSON.parse(content);
+
+        console.log('Highscores:', highscores.highscores);
+        // Update your game's leaderboard with the retrieved highscores
+    } catch (error) {
+        console.error('Failed to retrieve highscores:', error);
+    }
 }
+
+// Call the function to get highscores
+getHighscores();
+
 
 // Function to submit a new highscore
 async function submitScore(username, score) {
