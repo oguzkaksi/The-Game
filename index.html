@@ -340,7 +340,7 @@ for (let i = 0; i < cars.length; i++) {
                 ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2 - 20);
 
                 // Display "Press F5 to reload" message
-                ctx.fillStyle = "black";
+                ctx.fillStyle = "white";
                 ctx.font = "20px Arial";
                 const reloadText = "Press F5 to reload.";
                 const reloadWidth = ctx.measureText(reloadText).width;
@@ -357,10 +357,12 @@ for (let i = 0; i < cars.length; i++) {
                     // Display clickable link
                     ctx.fillStyle = "blue";
                     ctx.font = "20px Arial";
-                    const linkText = "Click";
+                    const linkText = "Click Here To Reveal!";
                     const linkWidth = ctx.measureText(linkText).width;
                     const linkX = canvas.width / 2 - linkWidth / 2;
-                    const linkY = canvas.height / 2 + 100;
+                    const linkY = canvas.height / 2 + 65;
+
+                    
 
                     ctx.fillText(linkText, linkX, linkY);
 
@@ -382,7 +384,7 @@ for (let i = 0; i < cars.length; i++) {
                     // Display "Thank you for playing!" text
                     ctx.fillStyle = "white";
                     ctx.font = "20px Arial";
-                    ctx.fillText("Thank you for playing!", canvas.width / 2 - 120, canvas.height / 2 + 140);
+                    ctx.fillText("Thank you for playing!", canvas.width / 2 - 100, canvas.height / 2 + 140);
                 }
             }
 
