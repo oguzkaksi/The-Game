@@ -57,7 +57,17 @@
         <h1>The Game</h1>
         <p>Use arrow keys to move.</p>
         <p>If you make it to 15 points, there is a reveal.</p>
-        <button id="startButton">Start</button>
+        <button id="startButton" onclick="getUsername()">Start</button>
+
+
+            <!-- Highscore Leaderboard -->
+    <div id="leaderboard">
+        <h2>Highscores</h2>
+        <ol id="highscoreList"></ol>
+    </div>
+
+        
+        
     </div>
     <pre id="asciiArt">
                                                                                                     
@@ -115,6 +125,110 @@
         const startScreen = document.getElementById("startScreen");
         const startButton = document.getElementById("startButton");
 
+
+               // Existing JavaScript code...
+
+        // Function to prompt for username
+        function getUsername() {
+            const username = prompt("Enter your username:");
+
+            if (username) {
+                startGame(username);
+            } else {
+                alert("Please enter a valid username!");
+                getUsername();
+            }
+
+
+                    // Function to update highscore list
+        function updateHighscoreList(highscores) {
+            const highscoreList = document.getElementById("highscoreList");
+            highscoreList.innerHTML = "";
+
+            for (let i = 0; i < Math.min(highscores.length, 10); i++) {
+                const li = document.createElement("li");
+                li.textContent = `${highscores[i].username}: ${highscores[i].score}`;
+                highscoreList.appendChild(li);
+            }
+        }
+
+
+        const repositoryOwner = 'oguzkaksi';
+const repositoryName = 'The-Game';
+const filePath = 'highscores.json';
+const apiUrl = `https://api.github.com/repos/${oguzkaksi}/${The-Game}/contents/${The-Game
+/highscores.json}`;
+
+// Function to get highscores
+async function getHighscores() {
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    const highscores = JSON.parse(atob(data.content)); // Decode base64 content
+    console.log('Highscores:', highscores.highscores);
+    // Update your game's leaderboard with the retrieved highscores
+  } catch (error) {
+    console.error('Failed to retrieve highscores:', error);
+  }
+}
+
+// Function to submit a new highscore
+async function submitScore(username, score) {
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    const highscores = JSON.parse(atob(data.content)); // Decode base64 content
+    highscores.highscores.push({ username, score });
+    
+    // Update the file on GitHub
+    await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `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`, // Generate a personal access token in GitHub
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: 'Update highscores',
+        content: btoa(JSON.stringify(highscores)), // Encode content to base64
+        sha: data.sha,
+      }),
+    });
+
+    console.log('Score submitted successfully!');
+  } catch (error) {
+    console.error('Failed to submit score:', error);
+  }
+}
+
+
+
+
+
+
+
+        // Function to start the game
+        function startGame(username) {
+            // Existing game initialization code...
+
+            // Display the username on the canvas
+            ctx.fillStyle = "white";
+            ctx.font = "15px Arial";
+            ctx.fillText(`Player: ${username}`, playerX, playerY - 10);
+
+            // (Existing code for updating the game loop)
+
+            // Simulate loading highscores (you'll replace this with your actual highscore retrieval logic)
+            const dummyHighscores = [
+                { username: "Player1", score: 20 },
+                { username: "Player2", score: 18 },
+                { username: "Player3", score: 15 },
+                // Add more dummy highscores...
+            ];
+
+            // Update the highscore list
+            updateHighscoreList(dummyHighscores);
+        }
+        }
         // Player properties
         const playerWidth = 50;
         const playerHeight = 80;
