@@ -43,7 +43,7 @@
             white-space: pre;
             font-size: 5px; /* Adjust the font size as needed */
             position: absolute;
-            top: 5%;
+            top: -3%;
             left: 50%;
             transform: translateX(-50%);
             color: white;
@@ -56,6 +56,7 @@
     <div id="startScreen">
         <h1>The Game</h1>
         <p>Use arrow keys to move.</p>
+        <p>If you make it to 15 points, there is a reveal.</p>
         <button id="startButton">Start</button>
     </div>
     <pre id="asciiArt">
@@ -152,12 +153,7 @@
         document.addEventListener("keydown", function (e) {
             keys[e.key] = true;
 
-            // Start the game on pressing any key if not already started
-            if (!gameStarted) {
-                gameStarted = true;
-                startScreen.style.display = "none";
-                startGame();
-            }
+
         });
 
         document.addEventListener("keyup", function (e) {
